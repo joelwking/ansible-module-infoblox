@@ -1,5 +1,9 @@
 #!/usr/bin/python
-
+"""
+    Revision history:
+     12 September 2016  |  1.0 - Molina branch changes to get_host_by_name
+                                and create_host_record - joel.king@wwt.com
+"""
 DOCUMENTATION = '''
 module: infoblox
 short_description: manage Infoblox via Web API
@@ -243,8 +247,7 @@ class Infoblox(object):
         '''
         if not host:
             self.module.exit_json(msg="You must specify the option 'host'.")
-        return self.invoke('get', "record:host", params={'name': host, '_return_fields+' : 'comment,extattrs' ,'view': self.dns_view})
-
+        return self.invoke('get', "record:host", params={'name': host })                      # Molina branch
     # ---------------------------------------------------------------------------
     # create_host_record()
     # ---------------------------------------------------------------------------
@@ -261,7 +264,7 @@ class Infoblox(object):
         else:
             raise Exception("Function options missing!")
 
-        return self.invoke('post', "record:host?_return_fields=ipv4addrs", ok_codes=(200, 201, 400), json=payload)
+        return self.invoke('post', "record:host?", ok_codes=(200, 201, 400), json=payload)    # Molina branch
 
     # ---------------------------------------------------------------------------
     # delete_object()
