@@ -19,14 +19,14 @@
      unique_hostname: "wwt-{{ansible_date_time.epoch}}"
      infoblox:
        server: atc-infoblox-dev.wwtatc.local
-       password: WWTwwt1!
+       password: "{{password}}" 
        username: admin
      query:
        - ngdcatc.local
 
   tasks:
-  # - name: Decrypt the password file
-  #   include_vars: "./passwords.yml"
+  - name: Decrypt the password file
+    include_vars: "./passwords.yml"
 
   - name: Query host
     infoblox:
