@@ -1,0 +1,89 @@
+#!/usr/bin/ansible-playbook
+---
+#
+#      Copyright (c) 2016 World Wide Technology, Inc.
+#      All rights reserved.
+#
+#      author: Joel W. King,  World Wide Technology
+#
+#      Reference:
+#         https://community.infoblox.com/t5/API-Integration/The-definitive-list-of-REST-examples/m-p/1214
+#         https://atc-infoblox-dev.wwtatc.local/wapi/v1.2/record:host?name=foo.wwtatc.local
+#
+#
+- name:   Infoblox
+  hosts:  localhost
+  gather_facts: yes 
+
+  vars:
+     unique_hostname: "wwt-{{ansible_date_time.epoch}}"
+     infoblox:
+       server: atc-infoblox-dev.wwtatc.local
+       password: WWTwwt1!
+       username: admin
+     query:
+       - ngdcatc.local
+
+  tasks:
+  # - name: Decrypt the password file
+  #   include_vars: "./passwords.yml"
+
+  - name: Query host
+    infoblox:
+       server: "{{infoblox.server}}"
+       username: "{{infoblox.username}}"
+       password: "{{infoblox.password}}"
+       action: get_host
+       api_version: "1.2"
+       dns_view: default
+       host: "{{item}}"
+    with_items: "{{query}}"
+
+  - name: Get Next Available IP
+    register: f5_dhcp_ip
+    infoblox:
+       server: "{{infoblox.server}}"
+       username: "{{infoblox.username}}"
+       password: "{{infoblox.password}}"
+       action: get_next_available_ip
+       network: "192.0.2.0/24"
+       api_version: "1.2"
+       dns_view: default
+
+  - name: Query IPs
+    debug: msg="{{item}}"
+    with_items: "{{f5_dhcp_ip.result.ips}}"
+
+  - name: add the first IP  address returned
+    infoblox:
+       server: "{{infoblox.server}}"
+       username: "{{infoblox.username}}"
+       password: "{{infoblox.password}}"
+       action: add_host
+       api_version: "1.2"
+       dns_view: default
+       host: "{{unique_hostname}}.example.net"
+       address: "{{f5_dhcp_ip.result.ips[0]}}"
+       comment: "Updated by Ansible from {{ansible_hostname}} by {{ansible_user_id}}"
+
+  - name: add ip address
+    infoblox:
+       server: "{{infoblox.server}}"
+       username: "{{infoblox.username}}"
+       password: "{{infoblox.password}}"
+       action: add_host
+       api_version: "1.2"
+       dns_view: default
+       host: "mx-ip-kingjoe.example.net"
+       address: "192.0.2.10"
+       comment: "Updated by Ansible from {{ansible_hostname}} by {{ansible_user_id}}" 
+
+  - name: delete host
+    infoblox:
+       server: "{{infoblox.server}}"
+       username: "{{infoblox.username}}"
+       password: "{{infoblox.password}}"
+       action: delete_host
+       api_version: "1.2"
+       dns_view: default
+       host: "mx-ip-kingjoe.example.net"
